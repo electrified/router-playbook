@@ -1,0 +1,186 @@
+---
+- hosts: all
+  become: true
+  roles:
+  - oefenweb.dnsmasq
+  vars:
+    created_username: ed2
+    dnsmasq_dnsmasq_d_files_present:
+      lan-setup:
+        - |
+          listen-address=::1,127.0.0.1,192.168.1.1,192.168.2.1
+          interface=eth0, eth1
+          dhcp-range=192.168.1.10,192.168.1.150,255.255.255.0,12h
+          dhcp-range=192.168.2.10,192.168.2.150,255.255.255.0,12h
+          dhcp-option=option:router,192.168.1.1
+          dhcp-option=6,192.168.1.1
+          dhcp-authoritative
+          log-async
+          log-queries
+          log-dhcp
+          domain=badgerfields.lan
+  tasks:
+    # - name: "Ansible | Creating a file with content"
+    #   copy:
+    #     dest: "/etc/udev/rules.d/10-nanopi-r5s-eth.rules"
+    #     content: |
+    #       SUBSYSTEM=="net", ACTION=="add", DRIVERS=="rk_gmac-dwmac", KERNEL=="eth2", NAME="eth0"
+    #       SUBSYSTEM=="net", ACTION=="add", DRIVERS=="r8169", KERNEL=="eth0", NAME="eth1"
+    #       SUBSYSTEM=="net", ACTION=="add", DRIVERS=="r8169", KERNEL=="eth1", NAME="eth2"
+    - name: Install aptitude
+      apt:
+        name: aptitude
+        state: latest
+        update_cache: true
+
+    - name: Setup passwordless sudo
+      lineinfile:
+        path: /etc/sudoers
+        state: present
+        regexp: '^%sudo'
+        line: '%sudo ALL=(ALL) NOPASSWD: ALL'
+        validate: '/usr/sbin/visudo -cf %s'
+
+    - name: Create a new regular user with sudo privileges
+      user:
+        name: "{{ created_username }}"
+        state: present
+        groups: sudo
+        append: true
+        create_home: true
+
+    - name: Set authorized key for remote user
+      ansible.posix.authorized_key:
+        user: "{{ created_username }}"
+        state: present
+        key: "{{ lookup('file', lookup('env','HOME') + '/.ssh/id_rsa.pub') }}"
+
+    - name: Disable password authentication for root
+      lineinfile:
+        path: /etc/ssh/sshd_config
+        state: present
+        regexp: '^#?PermitRootLogin'
+        line: 'PermitRootLogin prohibit-password'
+
+    - name: Update apt and install required system packages
+      apt:
+        pkg:
+          - curl
+          - vim
+          - git
+          - firewalld
+          - dnsmasq
+        state: latest
+        update_cache: true
+    - name: "Ansible | Creating a file with content"
+      copy:
+        dest: "/etc/network/interfaces"
+        content: |
+          ### Interfaces
+          source /etc/network/interfaces.d/*sys
+
+          ### Loopback network interface
+          auto lo
+          iface lo inet loopback
+
+          ### Ethernet
+          auto eth0
+          allow-hotplug eth0
+          iface eth0 inet static
+          address 192.168.1.1
+          netmask 255.255.255.0
+          #gateway 10.0.0.1
+          #dns-nameservers 8.8.8.8 8.8.4.4
+
+          auto eth1
+          allow-hotplug eth1
+          iface eth1 inet static
+          address 192.168.2.1
+          netmask 255.255.255.0
+
+          auto eth2
+          allow-hotplug eth2
+          iface eth2 inet dhcp
+    - name: add lan 1
+      ansible.posix.firewalld:
+        zone: internal
+        interface: eth0
+        state: enabled
+        permanent: yes
+    - name: add lan 2
+      ansible.posix.firewalld:
+        zone: internal
+        interface: eth1
+        state: enabled
+        permanent: yes
+    - name: add wan
+      ansible.posix.firewalld:
+        zone: external
+        interface: eth2
+        state: enabled
+        permanent: yes
+    - name: add ssh
+      ansible.posix.firewalld:
+        zone: internal
+        service: ssh
+        state: enabled
+        permanent: yes
+    - name: add dhcp
+      ansible.posix.firewalld:
+        zone: internal
+        service: dhcp
+        state: enabled
+        permanent: yes
+    - name: add dhcpv6
+      ansible.posix.firewalld:
+        zone: internal
+        service: dhcpv6-client
+        state: enabled
+        permanent: yes
+    - name: add dns
+      ansible.posix.firewalld:
+        zone: internal
+        service: dns
+        state: enabled
+        permanent: yes
+    - name: add masq
+      ansible.posix.firewalld:
+        zone: external
+        masquerade: yes
+        state: enabled
+        permanent: yes
+    - name: add masq
+      ansible.posix.firewalld:
+        zone: external
+        target: DROP
+        state: enabled
+        permanent: yes
+    - name: enable forwarding
+      ansible.posix.sysctl:
+        name: net.ipv4.ip_forward
+        value: '1'
+        sysctl_set: yes
+        state: present
+        reload: yes
+    - name: enable ipv6 forwarding
+      ansible.posix.sysctl:
+        name: net.ipv6.conf.all.forwarding
+        value: '1'
+        sysctl_set: yes
+        state: present
+        reload: yes
+        
+    # - name: permit traffic in internal zone
+    #   ansible.posix.firewalld:
+    #     zone: internal
+    #     source: 192.168.1.0/24
+    #     state: enabled
+    #     permanent: yes
+    # - name: permit traffic in internal zone 2
+    #   ansible.posix.firewalld:
+    #     zone: internal
+    #     source: 192.168.2.0/24
+    #     state: enabled
+    #     permanent: yes
+    - name: Reload firewalld
+      command: /usr/bin/firewall-cmd --reload
