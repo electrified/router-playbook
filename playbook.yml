@@ -27,6 +27,13 @@
           SUBSYSTEM=="net", ACTION=="add", DRIVERS=="rk_gmac-dwmac", KERNEL=="eth2", NAME="wan"
           SUBSYSTEM=="net", ACTION=="add", DRIVERS=="r8169", KERNEL=="eth0", NAME="lan1"
           SUBSYSTEM=="net", ACTION=="add", DRIVERS=="r8169", KERNEL=="eth1", NAME="lan2"
+    - name: Fix leds
+      copy:
+        dest: "/etc/udev/rules.d/10-nanopi-r5s-led.rules"
+        content: |
+          SUBSYSTEM=="leds", KERNEL=="green:wan", ACTION=="add", ATTR{trigger}="netdev", ATTR{device_name}="wan", ATTR{link}="1" ATTR{rx}="1" ATTR{tx}="1"
+          SUBSYSTEM=="leds", KERNEL=="green:lan1", ACTION=="add", ATTR{trigger}="netdev", ATTR{device_name}="lan1", ATTR{link}="1" ATTR{rx}="1" ATTR{tx}="1"
+          SUBSYSTEM=="leds", KERNEL=="green:lan2", ACTION=="add", ATTR{trigger}="netdev", ATTR{device_name}="lan2", ATTR{link}="1" ATTR{rx}="1" ATTR{tx}="1"
     - name: Install aptitude
       apt:
         name: aptitude
