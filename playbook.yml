@@ -20,26 +20,6 @@
           log-dhcp
           domain=badgerfields.lan
   tasks:
-    - name: Rename interfaces
-      copy:
-        dest: "/etc/udev/rules.d/05-nanopi-r5s-eth.rules"
-        content: |
-          SUBSYSTEM=="net", ACTION=="add", DRIVERS=="rk_gmac-dwmac", KERNEL=="eth2", NAME="wan"
-          SUBSYSTEM=="net", ACTION=="add", DRIVERS=="r8169", KERNEL=="eth0", NAME="lan1"
-          SUBSYSTEM=="net", ACTION=="add", DRIVERS=="r8169", KERNEL=="eth1", NAME="lan2"
-    - name: Fix leds
-      copy:
-        dest: "/etc/udev/rules.d/10-nanopi-r5s-led.rules"
-        content: |
-          SUBSYSTEM=="leds", KERNEL=="green:wan", ACTION=="add", ATTR{trigger}="netdev", ATTR{device_name}="wan", ATTR{link}="1" ATTR{rx}="1" ATTR{tx}="1"
-          SUBSYSTEM=="leds", KERNEL=="green:lan1", ACTION=="add", ATTR{trigger}="netdev", ATTR{device_name}="lan1", ATTR{link}="1" ATTR{rx}="1" ATTR{tx}="1"
-          SUBSYSTEM=="leds", KERNEL=="green:lan2", ACTION=="add", ATTR{trigger}="netdev", ATTR{device_name}="lan2", ATTR{link}="1" ATTR{rx}="1" ATTR{tx}="1"
-    - name: Install aptitude
-      apt:
-        name: aptitude
-        state: latest
-        update_cache: true
-
     - name: Setup passwordless sudo
       lineinfile:
         path: /etc/sudoers
@@ -68,17 +48,35 @@
         state: present
         regexp: '^#?PermitRootLogin'
         line: 'PermitRootLogin prohibit-password'
-
+        
+    - name: Rename interfaces
+      copy:
+        dest: "/etc/udev/rules.d/05-nanopi-r5s-eth.rules"
+        content: |
+          SUBSYSTEM=="net", ACTION=="add", DRIVERS=="rk_gmac-dwmac", KERNEL=="eth2", NAME="wan"
+          SUBSYSTEM=="net", ACTION=="add", DRIVERS=="r8169", KERNEL=="eth0", NAME="lan1"
+          SUBSYSTEM=="net", ACTION=="add", DRIVERS=="r8169", KERNEL=="eth1", NAME="lan2"
+    - name: Fix leds
+      copy:
+        dest: "/etc/udev/rules.d/10-nanopi-r5s-led.rules"
+        content: |
+          SUBSYSTEM=="leds", KERNEL=="green:wan", ACTION=="add", ATTR{trigger}="netdev", ATTR{device_name}="wan", ATTR{link}="1" ATTR{rx}="1" ATTR{tx}="1"
+          SUBSYSTEM=="leds", KERNEL=="green:lan1", ACTION=="add", ATTR{trigger}="netdev", ATTR{device_name}="lan1", ATTR{link}="1" ATTR{rx}="1" ATTR{tx}="1"
+          SUBSYSTEM=="leds", KERNEL=="green:lan2", ACTION=="add", ATTR{trigger}="netdev", ATTR{device_name}="lan2", ATTR{link}="1" ATTR{rx}="1" ATTR{tx}="1"
+    - name: Install aptitude
+      apt:
+        name: aptitude
+        state: latest
+        update_cache: true
     - name: Update apt and install required system packages
       apt:
         pkg:
-          - curl
-          - vim
-          - git
           - firewalld
           - dnsmasq
           - prometheus-node-exporter
           - podman
+          # - iperf3
+          - lm-sensors
         state: latest
         update_cache: true
     - name: "Ansible | Creating a file with content"
@@ -153,18 +151,26 @@
         permanent: yes
     - name: enable forwarding
       ansible.posix.sysctl:
-        name: net.ipv4.ip_forward
-        value: '1'
+        name: "{{ item.key }}"
+        value: "{{ item.value }}"
         sysctl_set: yes
         state: present
         reload: yes
-    - name: enable ipv6 forwarding
-      ansible.posix.sysctl:
-        name: net.ipv6.conf.all.forwarding
-        value: '1'
-        sysctl_set: yes
-        state: present
-        reload: yes
+      loop:
+      - { key: 'net.ipv4.ip_forward', value: '1' }
+      - { key: 'net.ipv6.conf.all.forwarding', value: '1' }
+      # allow testing with buffers up to 64MB 
+      - { key: 'net.core.rmem_max', value: '67108864' }
+      - { key: 'net.core.wmem_max', value: '67108864' }
+      # increase Linux autotuning TCP buffer limit to 32MB
+      - { key: 'net.ipv4.tcp_rmem', value: '4096 87380 33554432' }
+      - { key: 'net.ipv4.tcp_wmem', value: '4096 65536 33554432' }
+      # recommended default congestion control is htcp 
+      - { key: 'net.ipv4.tcp_congestion_control', value: 'htcp' }
+      # recommended for hosts with jumbo frames enabled
+      - { key: 'net.ipv4.tcp_mtu_probing', value: '1' }
+      # recommended to enable 'fair queueing'
+      - { key: 'net.core.default_qdisc', value: 'fq' }
     - name: open port for node exporter
       ansible.posix.firewalld:
         port: 9100/tcp
@@ -174,6 +180,18 @@
     - name: open port for ntopng
       ansible.posix.firewalld:
         port: 3000/tcp
+        permanent: yes
+        state: enabled
+        zone: internal
+    - name: open port for iperf3
+      ansible.posix.firewalld:
+        port: 5201/tcp
+        permanent: yes
+        state: enabled
+        zone: internal
+    - name: open port for iperf3
+      ansible.posix.firewalld:
+        port: 5201/udp
         permanent: yes
         state: enabled
         zone: internal
@@ -205,4 +223,3 @@
         enabled: yes
         masked: no
         state: started
-        
