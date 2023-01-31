@@ -1,8 +1,8 @@
 ---
 - hosts: all
   become: true
-  roles:
-  - oefenweb.dnsmasq
+  # roles:
+  #   - oefenweb.dnsmasq
   vars:
     created_username: ed2
     dnsmasq_dnsmasq_d_files_present:
@@ -63,22 +63,22 @@
           SUBSYSTEM=="leds", KERNEL=="green:wan", ACTION=="add", ATTR{trigger}="netdev", ATTR{device_name}="wan", ATTR{link}="1" ATTR{rx}="1" ATTR{tx}="1"
           SUBSYSTEM=="leds", KERNEL=="green:lan1", ACTION=="add", ATTR{trigger}="netdev", ATTR{device_name}="lan1", ATTR{link}="1" ATTR{rx}="1" ATTR{tx}="1"
           SUBSYSTEM=="leds", KERNEL=="green:lan2", ACTION=="add", ATTR{trigger}="netdev", ATTR{device_name}="lan2", ATTR{link}="1" ATTR{rx}="1" ATTR{tx}="1"
-    - name: Install aptitude
-      apt:
-        name: aptitude
-        state: latest
-        update_cache: true
-    - name: Update apt and install required system packages
-      apt:
-        pkg:
-          - firewalld
-          - dnsmasq
-          - prometheus-node-exporter
-          - podman
-          # - iperf3
-          - lm-sensors
-        state: latest
-        update_cache: true
+    # - name: Install aptitude
+    #   apt:
+    #     name: aptitude
+    #     state: latest
+    #     update_cache: true
+    # - name: Update apt and install required system packages
+    #   apt:
+    #     pkg:
+    #       - firewalld
+    #       - dnsmasq
+    #       - prometheus-node-exporter
+    #       - podman
+    #       # - iperf3
+    #       - lm-sensors
+    #     state: latest
+    #     update_cache: true
     - name: "Ansible | Creating a file with content"
       copy:
         dest: "/etc/network/interfaces"
@@ -105,9 +105,16 @@
           address 192.168.2.1
           netmask 255.255.255.0
 
-          auto wan
-          allow-hotplug wan
-          iface wan inet dhcp
+          # auto wan
+          # allow-hotplug wan
+          # iface wan inet dhcp
+    - name: Include the foo_app_instance role
+      include_role:
+        name: rivimey.ansible_role_pppoe
+      vars:
+        pppoe_eth_dev: wan
+        pppoe_client_user: "{{pppoe_client_user}}"
+        pppoe_client_password: "{{pppoe_client_password}}"
     - name: add lan 1
       ansible.posix.firewalld:
         zone: internal
@@ -120,10 +127,16 @@
         interface: lan2
         state: enabled
         permanent: yes
+    # - name: add wan
+    #   ansible.posix.firewalld:
+    #     zone: external
+    #     interface: wan
+    #     state: enabled
+    #     permanent: yes
     - name: add wan
       ansible.posix.firewalld:
         zone: external
-        interface: wan
+        interface: ppp0
         state: enabled
         permanent: yes
     - name: add internal services
@@ -137,13 +150,13 @@
         - dhcp
         - dhcpv6-client
         - dns
-    - name: add masq
+    - name: add masquerade
       ansible.posix.firewalld:
         zone: external
         masquerade: yes
         state: enabled
         permanent: yes
-    - name: add masq
+    - name: add masquerade
       ansible.posix.firewalld:
         zone: external
         target: DROP
@@ -197,29 +210,29 @@
         zone: internal
     - name: Reload firewalld
       command: /usr/bin/firewall-cmd --reload
-    - name: Pull an image
-      containers.podman.podman_image:
-        name: docker.io/phantomski/ntopng
-    - name: Run ntopng container
-      containers.podman.podman_container:
-        name: ntopng
-        image: phantomski/ntopng
-        network: host
-        cap_add:
-          - CAP_NET_RAW
-          - CAP_NET_ADMIN
-        state: started
-        detach: true
-        command: /run.sh -i wan -i lan1 -i lan2 --community
-        generate_systemd:
-          path: /etc/systemd/system/
-          restart_policy: always
-          time: 120
-          names: true
-    - name: Enable service httpd and ensure it is not masked
-      ansible.builtin.systemd:
-        daemon_reload: true
-        name: container-ntopng
-        enabled: yes
-        masked: no
-        state: started
+    # - name: Pull an image
+    #   containers.podman.podman_image:
+    #     name: docker.io/phantomski/ntopng
+    # - name: Run ntopng container
+    #   containers.podman.podman_container:
+    #     name: ntopng
+    #     image: phantomski/ntopng
+    #     network: host
+    #     cap_add:
+    #       - CAP_NET_RAW
+    #       - CAP_NET_ADMIN
+    #     state: started
+    #     detach: true
+    #     command: /run.sh -i wan -i lan1 -i lan2 --community
+    #     generate_systemd:
+    #       path: /etc/systemd/system/
+    #       restart_policy: always
+    #       time: 120
+    #       names: true
+    # - name: Enable service httpd and ensure it is not masked
+    #   ansible.builtin.systemd:
+    #     daemon_reload: true
+    #     name: container-ntopng
+    #     enabled: yes
+    #     masked: no
+    #     state: started

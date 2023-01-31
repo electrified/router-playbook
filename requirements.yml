@@ -3,3 +3,4 @@ collections:
   - name: ansible.posix
 roles:
   - name: oefenweb.dnsmasq
+  - name: rivimey.ansible_role_pppoe
