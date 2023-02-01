@@ -1,24 +1,8 @@
 ---
 - hosts: all
   become: true
-  # roles:
-  #   - oefenweb.dnsmasq
   vars:
     created_username: ed2
-    dnsmasq_dnsmasq_d_files_present:
-      lan-setup:
-        - |
-          listen-address=::1,127.0.0.1,192.168.1.1,192.168.2.1
-          interface=lan1, lan2
-          dhcp-range=192.168.1.10,192.168.1.150,255.255.255.0,12h
-          dhcp-range=192.168.2.10,192.168.2.150,255.255.255.0,12h
-          dhcp-option=option:router,192.168.1.1
-          dhcp-option=6,192.168.1.1
-          dhcp-authoritative
-          log-async
-          log-queries
-          log-dhcp
-          domain=badgerfields.lan
   tasks:
     - name: Setup passwordless sudo
       lineinfile:
@@ -63,11 +47,7 @@
           SUBSYSTEM=="leds", KERNEL=="green:wan", ACTION=="add", ATTR{trigger}="netdev", ATTR{device_name}="wan", ATTR{link}="1" ATTR{rx}="1" ATTR{tx}="1"
           SUBSYSTEM=="leds", KERNEL=="green:lan1", ACTION=="add", ATTR{trigger}="netdev", ATTR{device_name}="lan1", ATTR{link}="1" ATTR{rx}="1" ATTR{tx}="1"
           SUBSYSTEM=="leds", KERNEL=="green:lan2", ACTION=="add", ATTR{trigger}="netdev", ATTR{device_name}="lan2", ATTR{link}="1" ATTR{rx}="1" ATTR{tx}="1"
-    # - name: Install aptitude
-    #   apt:
-    #     name: aptitude
-    #     state: latest
-    #     update_cache: true
+
     # - name: Update apt and install required system packages
     #   apt:
     #     pkg:
@@ -108,7 +88,27 @@
           # auto wan
           # allow-hotplug wan
           # iface wan inet dhcp
-    - name: Include the foo_app_instance role
+    - name: Include the oefenweb.dnsmasq role
+      include_role:
+        name: oefenweb.dnsmasq
+      vars:
+        dnsmasq_dnsmasq_d_files_present:
+          lan-setup:
+            - |
+              listen-address=::1,127.0.0.1,192.168.1.1,192.168.2.1
+              interface=lan1, lan2
+              dhcp-range=lan1,192.168.1.10,192.168.1.150,255.255.255.0,12h
+              dhcp-range=lan2,192.168.2.10,192.168.2.150,255.255.255.0,12h
+              dhcp-option=option:router,192.168.1.1
+              dhcp-option=6,192.168.1.1
+              dhcp-authoritative
+              domain-needed
+              bogus-priv
+              log-async
+              log-queries
+              log-dhcp
+              domain=badgerfields.lan
+    - name: Include the ansible_role_pppoe role
       include_role:
         name: rivimey.ansible_role_pppoe
       vars:
@@ -127,12 +127,6 @@
         interface: lan2
         state: enabled
         permanent: yes
-    # - name: add wan
-    #   ansible.posix.firewalld:
-    #     zone: external
-    #     interface: wan
-    #     state: enabled
-    #     permanent: yes
     - name: add wan
       ansible.posix.firewalld:
         zone: external
