@@ -115,25 +115,33 @@
         pppoe_eth_dev: wan
         pppoe_client_user: "{{pppoe_client_user}}"
         pppoe_client_password: "{{pppoe_client_password}}"
-    - name: add lan 1
+        pppoe_boost_mtu: true
+        pppoe_eth_mtu: 1508
+        pppoe_ppp_mtu: 1500
+    - name: Restart pppoe service
+      ansible.builtin.systemd:
+        state: restarted
+        daemon_reload: true
+        name: pppoe
+    - name: firewall - add lan1
       ansible.posix.firewalld:
         zone: internal
         interface: lan1
         state: enabled
         permanent: yes
-    - name: add lan 2
+    - name: firewall - add lan2
       ansible.posix.firewalld:
         zone: internal
         interface: lan2
         state: enabled
         permanent: yes
-    - name: add wan
+    - name: firewall - add wan
       ansible.posix.firewalld:
         zone: external
         interface: ppp0
         state: enabled
         permanent: yes
-    - name: add internal services
+    - name: firewall - add internal services
       ansible.posix.firewalld:
         zone: internal
         service: "{{ item }}"
@@ -144,19 +152,19 @@
         - dhcp
         - dhcpv6-client
         - dns
-    - name: add masquerade
+    - name: firewall - add masquerade external
       ansible.posix.firewalld:
         zone: external
         masquerade: yes
         state: enabled
         permanent: yes
-    - name: add masquerade
+    - name: firewall - add default drop rule
       ansible.posix.firewalld:
         zone: external
         target: DROP
         state: enabled
         permanent: yes
-    - name: enable forwarding
+    - name: sysctl - enable forwarding
       ansible.posix.sysctl:
         name: "{{ item.key }}"
         value: "{{ item.value }}"
@@ -178,31 +186,31 @@
       - { key: 'net.ipv4.tcp_mtu_probing', value: '1' }
       # recommended to enable 'fair queueing'
       - { key: 'net.core.default_qdisc', value: 'fq' }
-    - name: open port for node exporter
+    - name: firewall - open port for node exporter
       ansible.posix.firewalld:
         port: 9100/tcp
         permanent: yes
         state: enabled
         zone: internal
-    - name: open port for ntopng
+    - name: firewall - open port for ntopng
       ansible.posix.firewalld:
         port: 3000/tcp
         permanent: yes
         state: enabled
         zone: internal
-    - name: open port for iperf3
+    - name: firewall - open port for iperf3
       ansible.posix.firewalld:
         port: 5201/tcp
         permanent: yes
         state: enabled
         zone: internal
-    - name: open port for iperf3
+    - name: firewall - open port for iperf3
       ansible.posix.firewalld:
         port: 5201/udp
         permanent: yes
         state: enabled
         zone: internal
-    - name: Reload firewalld
+    - name: firewall - Reload firewalld
       command: /usr/bin/firewall-cmd --reload
     # - name: Pull an image
     #   containers.podman.podman_image:
