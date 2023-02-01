@@ -1,0 +1,2 @@
+NATIVE="/usr/bin/gcc-10"
+CROSS="/usr/bin/aarch64-linux-gnu-gcc-10"

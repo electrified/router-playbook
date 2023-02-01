@@ -1,0 +1,11 @@
+# Boot Partition: true false
+ENABLE_VFAT="false"
+
+# Root Filesystem Types: ext4 btrfs xfs
+FSTYPE="ext4"
+
+# UEFI Options: true false
+ENABLE_EFI="false"
+
+### DO NOT EDIT BELOW THIS LINE
+# CUSTOM=5.1
