@@ -118,11 +118,13 @@
         pppoe_boost_mtu: true
         pppoe_eth_mtu: 1508
         pppoe_ppp_mtu: 1500
+      register: pppoe
     - name: Restart pppoe service
       ansible.builtin.systemd:
         state: restarted
         daemon_reload: true
         name: pppoe
+      when: pppoe.changed
     - name: firewall - add lan1
       ansible.posix.firewalld:
         zone: internal
@@ -152,6 +154,12 @@
         - dhcp
         - dhcpv6-client
         - dns
+    - name: firewall - remove ssh from external
+      ansible.posix.firewalld:
+        zone: external
+        service: ssh
+        state: disabled
+        permanent: yes
     - name: firewall - add masquerade external
       ansible.posix.firewalld:
         zone: external
@@ -214,15 +222,12 @@
       command: /usr/bin/firewall-cmd --reload
     # - name: Pull an image
     #   containers.podman.podman_image:
-    #     name: docker.io/phantomski/ntopng
-    # - name: Run ntopng container
+    #     name: docker.io/mbentley/omada-controller
+    # - name: Run omada container
     #   containers.podman.podman_container:
-    #     name: ntopng
-    #     image: phantomski/ntopng
+    #     name: omada
+    #     image: mbentley/omada-controller
     #     network: host
-    #     cap_add:
-    #       - CAP_NET_RAW
-    #       - CAP_NET_ADMIN
     #     state: started
     #     detach: true
     #     command: /run.sh -i wan -i lan1 -i lan2 --community
