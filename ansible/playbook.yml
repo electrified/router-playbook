@@ -218,28 +218,75 @@
         permanent: yes
         state: enabled
         zone: internal
+    - name: firewall - open ports for omada controller
+      ansible.posix.firewalld:
+        port: "{{ item }}"
+        permanent: yes
+        state: enabled
+        zone: internal
+      loop:
+        - "8088/tcp"
+        - "8043/tcp"
+        - "8843/tcp"
+        - "27001/udp"
+        - "29810/udp"
+        - "29811/tcp"
+        - "29812/tcp"
+        - "29813/tcp"
+        - "29814/tcp"
     - name: firewall - Reload firewalld
       command: /usr/bin/firewall-cmd --reload
-    # - name: Pull an image
-    #   containers.podman.podman_image:
-    #     name: docker.io/mbentley/omada-controller
-    # - name: Run omada container
-    #   containers.podman.podman_container:
-    #     name: omada
-    #     image: mbentley/omada-controller
-    #     network: host
-    #     state: started
-    #     detach: true
-    #     command: /run.sh -i wan -i lan1 -i lan2 --community
-    #     generate_systemd:
-    #       path: /etc/systemd/system/
-    #       restart_policy: always
-    #       time: 120
-    #       names: true
-    # - name: Enable service httpd and ensure it is not masked
-    #   ansible.builtin.systemd:
-    #     daemon_reload: true
-    #     name: container-ntopng
-    #     enabled: yes
-    #     masked: no
-    #     state: started
+    - name: Pull an image
+      containers.podman.podman_image:
+        name: docker.io/mbentley/omada-controller
+    - name: Run omada container
+      containers.podman.podman_container:
+        name: omada-controller
+        image: mbentley/omada-controller
+        network: host
+        state: started
+        detach: true
+        env:
+          PUID: 508
+          PGID: 508
+          MANAGE_HTTP_PORT: 8088
+          MANAGE_HTTPS_PORT: 8043
+          PORTAL_HTTP_PORT: 8088
+          PORTAL_HTTPS_PORT: 8843
+          PORT_APP_DISCOVERY: 27001
+          PORT_ADOPT_V1: 29812
+          PORT_UPGRADE_V1: 29813
+          PORT_MANAGER_V1: 29811
+          PORT_MANAGER_V2: 29814
+          PORT_DISCOVERY: 29810
+          SHOW_SERVER_LOGS: true
+          SHOW_MONGODB_LOGS: false
+          SSL_CERT_NAME: "tls.crt"
+          SSL_KEY_NAME: "tls.key"
+          TZ: "Etc/UTC"
+        volumes:
+        - omada-data:/opt/tplink/EAPController/data
+        - omada-logs:/opt/tplink/EAPController/logs
+        ports:
+        - "8088:8088"
+        - "8043:8043"
+        - "8843:8843"
+        - "27001:27001/udp"
+        - "29810:29810/udp"
+        - "29811:29811"
+        - "29812:29812"
+        - "29813:29813"
+        - "29814:29814"
+        generate_systemd:
+          path: /etc/systemd/system/
+          restart_policy: always
+          time: 120
+          names: true
+    - name: Enable service omada-controller and ensure it is not masked
+      ansible.builtin.systemd:
+        daemon_reload: true
+        name: container-omada-controller
+        enabled: yes
+        masked: no
+        state: started
+
