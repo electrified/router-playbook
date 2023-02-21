@@ -47,19 +47,18 @@
           SUBSYSTEM=="leds", KERNEL=="green:wan", ACTION=="add", ATTR{trigger}="netdev", ATTR{device_name}="wan", ATTR{link}="1" ATTR{rx}="1" ATTR{tx}="1"
           SUBSYSTEM=="leds", KERNEL=="green:lan1", ACTION=="add", ATTR{trigger}="netdev", ATTR{device_name}="lan1", ATTR{link}="1" ATTR{rx}="1" ATTR{tx}="1"
           SUBSYSTEM=="leds", KERNEL=="green:lan2", ACTION=="add", ATTR{trigger}="netdev", ATTR{device_name}="lan2", ATTR{link}="1" ATTR{rx}="1" ATTR{tx}="1"
-
-    # - name: Update apt and install required system packages
-    #   apt:
-    #     pkg:
-    #       - firewalld
-    #       - dnsmasq
-    #       - prometheus-node-exporter
-    #       - podman
-    #       # - iperf3
-    #       - lm-sensors
-    #     state: latest
-    #     update_cache: true
-    - name: "Ansible | Creating a file with content"
+    - name: Install required system packages
+      apt:
+        pkg:
+          - firewalld
+          - dnsmasq
+          - prometheus-node-exporter
+          - podman
+          # - iperf3
+          - lm-sensors
+          - dhcpcd5
+          - radvd
+    - name: "Setup interfaces"
       copy:
         dest: "/etc/network/interfaces"
         content: |
@@ -88,6 +87,11 @@
           # auto wan
           # allow-hotplug wan
           # iface wan inet dhcp
+    - name: "Setup dhcpcd config"
+      copy:
+        src: templates/dhcpcd.conf
+        dest: "/etc/dhcpcd.conf"
+        backup: yes
     - name: Include the oefenweb.dnsmasq role
       include_role:
         name: oefenweb.dnsmasq
@@ -154,6 +158,14 @@
         - dhcp
         - dhcpv6-client
         - dns
+    - name: firewall - add external services
+      ansible.posix.firewalld:
+        zone: external
+        service: "{{ item }}"
+        state: enabled
+        permanent: yes
+      loop:
+        - dhcpv6-client
     - name: firewall - remove ssh from external
       ansible.posix.firewalld:
         zone: external
@@ -282,11 +294,11 @@
           restart_policy: always
           time: 120
           names: true
-    - name: Enable service omada-controller and ensure it is not masked
-      ansible.builtin.systemd:
-        daemon_reload: true
-        name: container-omada-controller
-        enabled: yes
-        masked: no
-        state: started
+    # - name: Enable service omada-controller and ensure it is not masked
+    #   ansible.builtin.systemd:
+    #     daemon_reload: true
+    #     name: container-omada-controller
+    #     enabled: yes
+    #     masked: no
+    #     state: started
 
