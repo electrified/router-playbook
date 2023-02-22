@@ -301,4 +301,16 @@
     #     enabled: yes
     #     masked: no
     #     state: started
+    - name: "Setup radvd config"
+      copy:
+        src: templates/radvd.conf
+        dest: "/etc/radvd.conf"
+        backup: yes
+    - name: Enable radvd service
+      ansible.builtin.systemd:
+        daemon_reload: true
+        name: radvd
+        enabled: yes
+        masked: no
+        state: started
 
