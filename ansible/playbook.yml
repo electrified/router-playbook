@@ -112,6 +112,8 @@
               log-queries
               log-dhcp
               domain=badgerfields.lan
+              cache-size=10000
+              no-negcache
     - name: Include the ansible_role_pppoe role
       include_role:
         name: rivimey.ansible_role_pppoe

@@ -17,6 +17,8 @@ https://github.com/pyavitz/debian-image-builder/issues/40
 MTU info
 https://www.sonicwall.com/support/knowledge-base/how-can-i-optimize-pppoe-connections/170505851231244/
 
+## DNS resolution
+/etc/resolvconf/update.d/dnsmasq causes the DNS servers to be written to /run/dnsmasq/resolv.conf 
 
 ## IPv6 info
 
