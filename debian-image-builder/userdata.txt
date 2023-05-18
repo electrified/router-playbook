@@ -33,7 +33,7 @@ petitboot=0
 emmc=0
 aircrack=0
 rootpasswd=0
-USER_PKGS="python3-apt iso-codes firewalld dnsmasq podman prometheus-node-exporter lm-sensors ppp pppoe pppoeconf iperf3"
+USER_PKGS="python3-apt iso-codes firewalld dnsmasq podman prometheus-node-exporter lm-sensors ppp pppoe pppoeconf iperf3 netstat-nat"
 ### COMPILER TUNING
 CORES=`nproc`
 CFLAGS=""
