@@ -181,6 +181,30 @@
         masquerade: yes
         state: enabled
         permanent: yes
+    - name: firewall - port forward bittorent port to zoomer udp
+      ansible.posix.firewalld:
+        zone: external
+        state: enabled
+        permanent: yes
+        port_forward:
+          - port: 62348
+            proto: udp
+            toaddr: 192.168.1.8
+            toport: 62348
+          # - port: 62348
+          #   proto: tcp
+          #   toaddr: 192.168.1.8
+          #   toport: 62348
+    - name: firewall - port forward bittorent port to zoomer tcp
+      ansible.posix.firewalld:
+        zone: external
+        state: enabled
+        permanent: yes
+        port_forward:
+          - port: 62348
+            proto: tcp
+            toaddr: 192.168.1.8
+            toport: 62348
     - name: firewall - add default drop rule
       ansible.posix.firewalld:
         zone: external
