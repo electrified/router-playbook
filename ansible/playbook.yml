@@ -103,6 +103,7 @@
               interface=lan1, lan2
               dhcp-range=lan1,192.168.1.10,192.168.1.150,255.255.255.0,12h
               dhcp-range=lan2,192.168.2.10,192.168.2.150,255.255.255.0,12h
+              dhcp-host=a4:6b:b6:3c:94:75,192.168.1.8,zoomer,30d
               dhcp-option=option:router,192.168.1.1
               dhcp-option=6,192.168.1.1
               dhcp-authoritative

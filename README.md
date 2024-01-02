@@ -46,3 +46,10 @@ isc-dhcp-client - https://www.isc.org/dhcp/ Installed in Debian by default howev
 https://radvd.litech.org/
 
 https://github.com/systemd/systemd/issues/481
+
+## IPv6 Debugging
+`ping -6 google.com`
+`ip -6 route`
+
+https://ipv6-test.com/
+https://test-ipv6.com/
