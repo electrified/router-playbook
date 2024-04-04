@@ -6,7 +6,7 @@ run ansible
 
 
 ```
-ansible-galaxy collection install -r requirements.yml
+ansible-galaxy install -r requirements.yml
 ansible-playbook -l nanopi -u ed -k -e @secrets_file.enc --ask-vault-pass playbook.yml
 ansible-playbook -l nanopi -u ed2 -e @secrets_file.enc --ask-vault-pass playbook.yml 
 ```
@@ -53,3 +53,6 @@ https://github.com/systemd/systemd/issues/481
 
 https://ipv6-test.com/
 https://test-ipv6.com/
+
+Doing a `systemctl restart dhcpcd` temporarily improves the ipv6 situation, however it breaks again after some time.
+wide-dhcpv6-client has been installed manually - uninstall

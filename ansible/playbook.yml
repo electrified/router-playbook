@@ -110,8 +110,8 @@
               domain-needed
               bogus-priv
               log-async
-              log-queries
-              log-dhcp
+              #log-queries
+              #log-dhcp
               domain=badgerfields.lan
               cache-size=10000
               no-negcache
@@ -191,10 +191,6 @@
             proto: udp
             toaddr: 192.168.1.8
             toport: 62348
-          # - port: 62348
-          #   proto: tcp
-          #   toaddr: 192.168.1.8
-          #   toport: 62348
     - name: firewall - port forward bittorent port to zoomer tcp
       ansible.posix.firewalld:
         zone: external
@@ -321,13 +317,13 @@
           restart_policy: always
           time: 120
           names: true
-    # - name: Enable service omada-controller and ensure it is not masked
-    #   ansible.builtin.systemd:
-    #     daemon_reload: true
-    #     name: container-omada-controller
-    #     enabled: yes
-    #     masked: no
-    #     state: started
+    - name: Enable service omada-controller and ensure it is not masked
+      ansible.builtin.systemd:
+        daemon_reload: true
+        name: container-omada-controller
+        enabled: no
+        masked: yes
+        state: stopped
     - name: "Setup radvd config"
       copy:
         src: templates/radvd.conf
@@ -340,4 +336,10 @@
         enabled: yes
         masked: no
         state: started
-
+    - name: Include the linux-system-roles.journald role
+      include_role:
+        name: linux-system-roles.journald
+      vars:
+        journald_persistent: false
+        journald_max_disk_size: 512
+        journald_sync_interval: 1

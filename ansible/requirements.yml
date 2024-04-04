@@ -4,3 +4,4 @@ collections:
 roles:
   - name: oefenweb.dnsmasq
   - name: rivimey.ansible_role_pppoe
+  - name: linux-system-roles.journald
