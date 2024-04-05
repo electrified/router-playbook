@@ -279,7 +279,7 @@
         name: omada-controller
         image: mbentley/omada-controller
         network: host
-        state: started
+        state: stopped
         detach: true
         env:
           PUID: 508
