@@ -22,6 +22,11 @@ https://www.sonicwall.com/support/knowledge-base/how-can-i-optimize-pppoe-connec
 
 ## IPv6 info
 
+### Services and their purpose
+- Radvd -Router Advertisement
+- dnsmasq - internal dhcp, dns
+- dhcpcd5
+
 https://wiki.debian.org/IPv6PrefixDelegation
 https://wiki.archlinux.org/title/IPv6
 
@@ -31,6 +36,8 @@ https://bbs.archlinux.org/viewtopic.php?id=244241
 https://www.reddit.com/r/ipv6/comments/deb531/linux_xfinity_dhcpcd_and_getting_a_local_prefix/
 
 https://vk5tu.livejournal.com/37206.html
+
+https://wiki.gentoo.org/wiki/IPv6_router_guide
 
 ## DHCPv6 clients
 
@@ -50,9 +57,13 @@ https://github.com/systemd/systemd/issues/481
 ## IPv6 Debugging
 `ping -6 google.com`
 `ip -6 route`
+`ping ipv6.google.com`
 
 https://ipv6-test.com/
 https://test-ipv6.com/
 
-Doing a `systemctl restart dhcpcd` temporarily improves the ipv6 situation, however it breaks again after some time.
-wide-dhcpv6-client has been installed manually - uninstall
+Show routing table `ip -6 route show` or `netstat -rn -6`
+
+Doing a `systemctl restart dhcpcd` temporarily improves the ipv6 situation, however it breaks again after restarting pppoe. It can be seen from looking at the ipv6 routing table there is no default route.
+
+wide-dhcpv6-client has been installed manually - uninstall - done
