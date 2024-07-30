@@ -7,7 +7,8 @@ run ansible
 
 ```
 ansible-galaxy install -r requirements.yml
-ansible-playbook -l nanopi -u ed -k -e @secrets_file.enc --ask-vault-pass playbook.yml
+ansible-playbook -l nanopi -u ed -e @secrets_file.enc --ask-vault-pass playbook.yml --ask-pass --ask-become-pass
+
 ansible-playbook -l nanopi -u ed2 -e @secrets_file.enc --ask-vault-pass playbook.yml 
 ```
 
