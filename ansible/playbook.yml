@@ -19,6 +19,7 @@
         groups: sudo
         append: true
         create_home: true
+        shell: /bin/bash
 
     - name: Set authorized key for remote user
       ansible.posix.authorized_key:
@@ -132,7 +133,7 @@
               log-async
               #log-queries
               log-dhcp
-              domain=badgerfields.lan
+              domain=badgerfields.internal
               cache-size=10000
               no-negcache
     - name: Include the ansible_role_pppoe role
