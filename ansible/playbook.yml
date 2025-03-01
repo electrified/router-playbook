@@ -76,6 +76,7 @@
           - lm-sensors
           - dhcpcd5
           - radvd
+          - dnsutils
     - name: "Setup interfaces"
       copy:
         dest: "/etc/network/interfaces"
@@ -123,8 +124,10 @@
               dhcp-range=lan2,192.168.2.10,192.168.2.150,255.255.255.0,12h
               dhcp-host=a4:6b:b6:3c:94:75,192.168.1.18,zoomer-w,30d
               dhcp-host=04:92:26:d9:d7:0f,192.168.1.8,zoomer,30d
-              dhcp-host=70:c9:4e:87:3e:5d,192.168.1.19,orinoco-w,30d
-              dhcp-host=2c:fd:a1:59:7a:62,192.168.1.9,orinoco,30d
+              dhcp-host=98:03:9b:13:ef:64,192.168.1.9,orinoco,30d
+              dhcp-host=00:47:43:61:01:29,192.168.1.7,amiga,30d
+              # dhcp-host=70:c9:4e:87:3e:5d,192.168.1.19,orinoco-w,30d
+              # dhcp-host=2c:fd:a1:59:7a:62,192.168.1.29,orinoco-areion,30d
               dhcp-option=option:router,192.168.1.1
               dhcp-option=6,192.168.1.1
               dhcp-authoritative
@@ -222,6 +225,16 @@
             proto: tcp
             toaddr: 192.168.1.8
             toport: 62348
+    # - name: firewall - port forward ssh port to zoomer tcp
+    #   ansible.posix.firewalld:
+    #     zone: external
+    #     state: enabled
+    #     permanent: yes
+    #     port_forward:
+    #       - port: 62123
+    #         proto: tcp
+    #         toaddr: 192.168.1.8
+    #         toport: 22
     - name: firewall - add default drop rule
       ansible.posix.firewalld:
         zone: external
@@ -365,5 +378,4 @@
         name: linux-system-roles.journald
       vars:
         journald_persistent: false
-        journald_max_disk_size: 512
-        journald_sync_interval: 1
+        journald_max_disk_size: 300
