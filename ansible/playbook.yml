@@ -139,6 +139,7 @@
               domain=badgerfields.internal
               cache-size=10000
               no-negcache
+              server=/cluster.badgerfields.internal/192.168.1.9
     - name: Include the ansible_role_pppoe role
       include_role:
         name: rivimey.ansible_role_pppoe
