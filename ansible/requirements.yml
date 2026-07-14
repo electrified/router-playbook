@@ -1,6 +1,7 @@
 ---
 collections:
   - name: ansible.posix
+    version: 2.2.0
 roles:
   - name: oefenweb.dnsmasq
   - name: rivimey.ansible_role_pppoe

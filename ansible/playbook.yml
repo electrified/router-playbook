@@ -58,6 +58,22 @@
     # disable network manager
     # add wifi config for raspberry pi 4
     # ensure resovle-conf is OK
+    - name: Reset Debian apt sources to bullseye
+      copy:
+        dest: /etc/apt/sources.list
+        content: |
+          deb http://deb.debian.org/debian bullseye main contrib non-free
+          deb http://deb.debian.org/debian bullseye-updates main contrib non-free
+          deb http://security.debian.org/debian-security bullseye-security main contrib non-free
+        backup: true
+
+    - name: Remove stale Debian apt source fragments
+      ansible.builtin.shell: |
+        find /etc/apt/sources.list.d -maxdepth 1 -type f \( -name '*.list' -o -name '*.sources' \) -print0 |
+        xargs -0 grep -lE 'deb\.debian\.org/debian(.*(testing|bullseye-backports|unstable|sid|bookworm|trixie|forky)|/testing)|deb\.debian\.org/debian-security.*testing' 2>/dev/null |
+        xargs -r rm -f
+      changed_when: false
+
     - name: Remove system packages
       apt:
         state: absent
@@ -122,8 +138,8 @@
               interface=lan1, lan2
               dhcp-range=lan1,192.168.1.10,192.168.1.150,255.255.255.0,12h
               dhcp-range=lan2,192.168.2.10,192.168.2.150,255.255.255.0,12h
-              dhcp-host=a4:6b:b6:3c:94:75,192.168.1.18,zoomer-w,30d
-              dhcp-host=04:92:26:d9:d7:0f,192.168.1.8,zoomer,30d
+              dhcp-host=8e:94:ff:8e:5c:47,192.168.1.18,zoomer-w,30d
+              dhcp-host=a8:a1:59:51:f5:5f,192.168.1.8,zoomer,30d
               dhcp-host=98:03:9b:13:ef:64,192.168.1.9,orinoco,30d
               dhcp-host=00:47:43:61:01:29,192.168.1.7,amiga,30d
               # dhcp-host=70:c9:4e:87:3e:5d,192.168.1.19,orinoco-w,30d
